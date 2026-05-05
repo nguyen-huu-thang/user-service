@@ -12,23 +12,30 @@ import jakarta.persistence.*;
                 )
         },
         indexes = {
+                @Index(name = "idx_user_interests_id", columnList = "id"),
                 @Index(name = "idx_user_interests_user_id", columnList = "user_id"),
                 @Index(name = "idx_user_interests_interest_id", columnList = "interest_id"),
                 @Index(name = "idx_user_interests_weight", columnList = "weight"),
-                @Index(name = "idx_user_interests_user_weight", columnList = "user_id,weight DESC")
+                @Index(name = "idx_user_interests_user_weight", columnList = "user_id, weight DESC")
         }
 )
 public class UserInterestEntity {
 
     // =========================
-    // COMPOSITE KEY (USER + INTEREST)
+    // ID (KSUID - BYTEA)
     // =========================
 
     @Id
+    @Column(name = "id", nullable = false, columnDefinition = "BYTEA")
+    private byte[] id;
+
+    // =========================
+    // RELATIONSHIP
+    // =========================
+
     @Column(name = "user_id", nullable = false, columnDefinition = "BYTEA")
     private byte[] userId;
 
-    @Id
     @Column(name = "interest_id", nullable = false, columnDefinition = "BYTEA")
     private byte[] interestId;
 
@@ -42,6 +49,14 @@ public class UserInterestEntity {
     // =========================
     // GETTER / SETTER
     // =========================
+
+    public byte[] getId() {
+        return id;
+    }
+
+    public void setId(byte[] id) {
+        this.id = id;
+    }
 
     public byte[] getUserId() {
         return userId;

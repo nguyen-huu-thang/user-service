@@ -4,16 +4,20 @@ import java.util.Objects;
 
 public class UserInterest {
 
+    private final Id id;
+
     private final Id userId;
     private final Id interestId;
 
     private final double weight;
 
     public UserInterest(
+            Id id,
             Id userId,
             Id interestId,
             double weight
     ) {
+        this.id = Objects.requireNonNull(id);
         this.userId = Objects.requireNonNull(userId);
         this.interestId = Objects.requireNonNull(interestId);
         this.weight = weight;
@@ -49,6 +53,7 @@ public class UserInterest {
 
     public UserInterest updateWeight(double newWeight) {
         return new UserInterest(
+                id,
                 userId,
                 interestId,
                 newWeight
@@ -57,6 +62,7 @@ public class UserInterest {
 
     public UserInterest increaseWeight(double delta) {
         return new UserInterest(
+                id,
                 userId,
                 interestId,
                 this.weight + delta
@@ -70,6 +76,7 @@ public class UserInterest {
         }
 
         return new UserInterest(
+                id,
                 userId,
                 interestId,
                 newWeight
@@ -79,6 +86,10 @@ public class UserInterest {
     // =========================
     // GETTERS
     // =========================
+
+    public Id getId() {
+        return id;
+    }
 
     public Id getUserId() {
         return userId;
