@@ -1,7 +1,7 @@
 package vn.xime.user.infrastructure.persistence.mapper;
 
-import vn.xime.user.domain.model.Id;
-import vn.xime.user.domain.model.UserUsernameHistory;
+import vn.xime.user.domain.sharedkernel.model.Id;
+import vn.xime.user.domain.user.model.UserUsernameHistory;
 import vn.xime.user.infrastructure.persistence.entity.UserUsernameHistoryEntity;
 
 import java.util.Arrays;

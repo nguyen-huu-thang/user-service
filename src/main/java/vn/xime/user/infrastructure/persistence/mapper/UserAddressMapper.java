@@ -1,8 +1,8 @@
 package vn.xime.user.infrastructure.persistence.mapper;
 
-import vn.xime.user.domain.model.AddressType;
-import vn.xime.user.domain.model.Id;
-import vn.xime.user.domain.model.UserAddress;
+import vn.xime.user.domain.address.model.AddressType;
+import vn.xime.user.domain.address.model.UserAddress;
+import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.infrastructure.persistence.entity.UserAddressEntity;
 
 import java.util.Arrays;

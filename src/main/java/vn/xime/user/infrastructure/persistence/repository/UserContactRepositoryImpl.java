@@ -1,10 +1,11 @@
 package vn.xime.user.infrastructure.persistence.repository;
 
 import org.springframework.stereotype.Repository;
-import vn.xime.user.domain.model.ContactType;
-import vn.xime.user.domain.model.Id;
-import vn.xime.user.domain.model.UserContact;
-import vn.xime.user.domain.repository.UserContactRepository;
+
+import vn.xime.user.application.port.out.contact.UserContactRepository;
+import vn.xime.user.domain.contact.model.ContactType;
+import vn.xime.user.domain.contact.model.UserContact;
+import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.infrastructure.persistence.mapper.UserContactMapper;
 
 import java.util.List;

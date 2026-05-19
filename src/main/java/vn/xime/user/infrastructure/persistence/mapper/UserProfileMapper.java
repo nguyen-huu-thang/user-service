@@ -1,8 +1,8 @@
 package vn.xime.user.infrastructure.persistence.mapper;
 
-import vn.xime.user.domain.model.Gender;
-import vn.xime.user.domain.model.Id;
-import vn.xime.user.domain.model.UserProfile;
+import vn.xime.user.domain.profile.model.Gender;
+import vn.xime.user.domain.profile.model.UserProfile;
+import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.infrastructure.persistence.entity.UserProfileEntity;
 
 import java.util.Arrays;

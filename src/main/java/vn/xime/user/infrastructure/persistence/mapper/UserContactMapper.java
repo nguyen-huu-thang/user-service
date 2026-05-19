@@ -1,8 +1,8 @@
 package vn.xime.user.infrastructure.persistence.mapper;
 
-import vn.xime.user.domain.model.ContactType;
-import vn.xime.user.domain.model.Id;
-import vn.xime.user.domain.model.UserContact;
+import vn.xime.user.domain.contact.model.ContactType;
+import vn.xime.user.domain.contact.model.UserContact;
+import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.infrastructure.persistence.entity.UserContactEntity;
 
 import java.util.Arrays;

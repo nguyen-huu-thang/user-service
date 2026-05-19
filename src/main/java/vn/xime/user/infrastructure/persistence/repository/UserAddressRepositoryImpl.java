@@ -1,10 +1,11 @@
 package vn.xime.user.infrastructure.persistence.repository;
 
 import org.springframework.stereotype.Repository;
-import vn.xime.user.domain.model.AddressType;
-import vn.xime.user.domain.model.Id;
-import vn.xime.user.domain.model.UserAddress;
-import vn.xime.user.domain.repository.UserAddressRepository;
+
+import vn.xime.user.application.port.out.address.UserAddressRepository;
+import vn.xime.user.domain.address.model.AddressType;
+import vn.xime.user.domain.address.model.UserAddress;
+import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.infrastructure.persistence.mapper.UserAddressMapper;
 
 import java.time.Instant;

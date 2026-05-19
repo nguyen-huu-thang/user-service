@@ -1,9 +1,10 @@
 package vn.xime.user.infrastructure.persistence.repository;
 
 import org.springframework.stereotype.Repository;
-import vn.xime.user.domain.model.Id;
-import vn.xime.user.domain.model.Interest;
-import vn.xime.user.domain.repository.InterestRepository;
+
+import vn.xime.user.application.port.out.interest.InterestRepository;
+import vn.xime.user.domain.interest.model.Interest;
+import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.infrastructure.persistence.mapper.InterestMapper;
 
 import java.util.List;
