@@ -15,6 +15,11 @@ public interface UserContactRepository {
 
     List<UserContact> findByUserId(Id userId);
 
+    boolean existsByTypeAndValue(
+        ContactType type,
+        String value
+    );
+
     // =========================
     // TYPE
     // =========================
