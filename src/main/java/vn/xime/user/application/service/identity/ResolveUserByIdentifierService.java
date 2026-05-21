@@ -15,9 +15,6 @@ import vn.xime.user.domain.user.model.User;
 import vn.xime.user.application.port.out.contact.UserContactRepository;
 import vn.xime.user.application.port.out.user.UserRepository;
 
-import vn.xime.user.application.usecase.identity.LoginUseCase
-    .ResolvedUser;
-
 
 /**
  * =========================================================
@@ -102,7 +99,7 @@ public class ResolveUserByIdentifierService {
      * RESOLVE USER
      * =====================================================
      */
-    public ResolvedUser resolve(
+    public User resolve(
         String identifier,
         IdentifierType identifierType
     ) {
@@ -152,7 +149,7 @@ public class ResolveUserByIdentifierService {
      * RESOLVE USERNAME OWNER
      * =====================================================
      */
-    private ResolvedUser resolveByUsername(
+    private User resolveByUsername(
         String username
     ) {
 
@@ -166,10 +163,7 @@ public class ResolveUserByIdentifierService {
             return null;
         }
 
-        return new ResolvedUser(
-            optionalUser.get(),
-            null
-        );
+        return optionalUser.get();
     }
 
 
@@ -185,7 +179,7 @@ public class ResolveUserByIdentifierService {
      *
      * =====================================================
      */
-    private ResolvedUser resolveByContact(
+    private User resolveByContact(
         ContactType contactType,
         String value
     ) {
@@ -232,9 +226,6 @@ public class ResolveUserByIdentifierService {
             return null;
         }
 
-        return new ResolvedUser(
-            optionalUser.get(),
-            contact
-        );
+        return optionalUser.get();
     }
 }

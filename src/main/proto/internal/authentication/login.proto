@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package user.internal.authentication;
+
+option java_package =
+    "vn.xime.user.grpc.internal.authentication";
+
+option java_multiple_files = true;
+
+import "internal/authentication/authentication_common.proto";
+
+
+// ==================================================
+// LOGIN SERVICE
+// ==================================================
+//
+// ⚠ INTERNAL API
+//
+// Identity Service
+// ->
+// User Service
+//
+// RESPONSIBILITY:
+//
+// - verify credential
+// - resolve account state
+//
+// SECURITY:
+//
+// - internal gRPC only
+// - mTLS required
+//
+service LoginService {
+
+  // ==================================================
+  // VERIFY CREDENTIAL
+  // ==================================================
+  //
+  // Verify human credential.
+  //
+  // USE CASE:
+  //
+  // - password login
+  // - oauth verification
+  // - passkey verification
+  //
+  rpc VerifyCredential (
+      VerifyCredentialRequest
+  ) returns (
+      VerifyCredentialResponse
+  );
+}
+
+
+// ==================================================
+// VERIFY CREDENTIAL REQUEST
+// ==================================================
+
+message VerifyCredentialRequest {
+
+  // Normalized identifier.
+  //
+  // Ví dụ:
+  // - username
+  // - email
+  // - phone
+  string identifier = 1;
+
+  IdentifierType identifier_type = 2;
+
+  // Raw credential.
+  //
+  // ⚠ KHÔNG được log.
+  string credential = 3;
+
+  CredentialType credential_type = 4;
+
+  // User-Agent / device metadata.
+  string user_agent = 5;
+
+  // Target user shard.
+  string shard_id = 6;
+}
+
+
+// ==================================================
+// VERIFY CREDENTIAL RESPONSE
+// ==================================================
+
+message VerifyCredentialResponse {
+
+  // Verification success.
+  bool success = 1;
+
+  // Verified identity.
+  //
+  // Chỉ tồn tại khi success = true.
+  VerifiedIdentityDto identity = 2;
+
+  // Failure reason.
+  //
+  // Ví dụ:
+  // - INVALID_CREDENTIAL
+  // - ACCOUNT_LOCKED
+  // - ACCOUNT_DISABLED
+  // - MFA_REQUIRED
+  string failure_reason = 3;
+
+  bool locked = 4;
+
+  bool disabled = 5;
+
+  bool requires_mfa = 6;
+}

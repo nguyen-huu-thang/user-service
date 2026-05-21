@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import vn.xime.user.domain.contact.model.UserContact;
 import vn.xime.user.domain.user.model.User;
 import vn.xime.user.domain.user.model.UserStatus;
 import vn.xime.user.domain.authentication.model.VerifiedIdentity;
@@ -149,13 +148,13 @@ public class LoginUseCase {
         // 3. RESOLVE USER
         // =================================================
 
-        ResolvedUser resolvedUser =
+        User user =
             resolveUserByIdentifierService.resolve(
                 normalizedIdentifier,
                 request.identifierType()
             );
 
-        if (resolvedUser == null) {
+        if (user == null) {
 
             return failure(
                 "IDENTITY_NOT_FOUND"
@@ -164,16 +163,7 @@ public class LoginUseCase {
 
 
         // =================================================
-        // 4. EXTRACT DOMAIN MODELS
-        // =================================================
-
-        User user =  resolvedUser.user();
-
-        UserContact contact = resolvedUser.contact();
-
-
-        // =================================================
-        // 5. VERIFY PASSWORD
+        // 4. VERIFY PASSWORD
         // =================================================
         //
         // FUTURE:
@@ -200,7 +190,7 @@ public class LoginUseCase {
 
 
         // =================================================
-        // 6. CHECK ACCOUNT STATE
+        // 5. CHECK ACCOUNT STATE
         // =================================================
         //
         // FUTURE:
@@ -242,33 +232,8 @@ public class LoginUseCase {
             );
         }
 
-
         // =================================================
-        // 7. CONTACT VERIFICATION POLICY
-        // =================================================
-        //
-        // CURRENT:
-        //
-        // chưa enforce verified email/phone.
-        //
-        // FUTURE:
-        //
-        // Có thể:
-        //
-        // - require verified email
-        // - require verified phone
-        // - adaptive policy
-        //
-        // =================================================
-
-        if (contact != null) {
-
-            // future verification policy
-        }
-
-
-        // =================================================
-        // 8. BUILD VERIFIED IDENTITY
+        // 6. BUILD VERIFIED IDENTITY
         // =================================================
 
         VerifiedIdentity identity =
@@ -282,7 +247,7 @@ public class LoginUseCase {
 
 
         // =================================================
-        // 9. SUCCESS RESPONSE
+        // 7. SUCCESS RESPONSE
         // =================================================
 
         return new VerifyCredentialResponse(
@@ -362,36 +327,5 @@ public class LoginUseCase {
                 "shardId is invalid"
             );
         }
-    }
-
-
-    /**
-     * =====================================================
-     * RESOLVED USER
-     * =====================================================
-     *
-     * Temporary internal transport object.
-     *
-     * =====================================================
-     * NOTE
-     * =====================================================
-     *
-     * USERNAME LOGIN:
-     *
-     * contact = null
-     *
-     * EMAIL / PHONE LOGIN:
-     *
-     * contact != null
-     *
-     * =====================================================
-     */
-    public record ResolvedUser(
-
-        User user,
-
-        UserContact contact
-
-    ) {
     }
 }

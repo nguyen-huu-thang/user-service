@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package user.internal.authentication;
+
+option java_package = "vn.xime.user.grpc.internal.authentication";
+
+option java_multiple_files = true;
+
+
+// ==================================================
+// VERIFIED IDENTITY
+// ==================================================
+
+message VerifiedIdentityDto {
+
+  // Authenticated subject ID.
+  string identity_id = 1;
+
+  // HUMAN / BOT / SERVICE / SYSTEM
+  string subject_type = 2;
+
+  // Subject shard.
+  string shard_id = 3;
+
+  // Owner service.
+  string service_id = 4;
+
+  // Optional tenant.
+  string tenant_id = 5;
+}
+
+
+// ==================================================
+// IDENTIFIER TYPE
+// ==================================================
+
+enum IdentifierType {
+
+  IDENTIFIER_TYPE_UNSPECIFIED = 0;
+
+  USERNAME = 1;
+
+  EMAIL = 2;
+
+  PHONE = 3;
+}
+
+
+// ==================================================
+// CREDENTIAL TYPE
+// ==================================================
+
+enum CredentialType {
+
+  CREDENTIAL_TYPE_UNSPECIFIED = 0;
+
+  PASSWORD = 1;
+
+  PASSKEY = 2;
+
+  OAUTH_GOOGLE = 3;
+
+  OAUTH_GITHUB = 4;
+
+  API_KEY = 5;
+
+  CERTIFICATE = 6;
+}

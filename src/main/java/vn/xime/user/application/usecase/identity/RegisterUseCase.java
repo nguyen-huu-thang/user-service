@@ -370,8 +370,7 @@ public class RegisterUseCase {
         //
         // =================================================
 
-        UserContact userContact =
-            null;
+        UserContact userContact = null;
 
         switch (request.identifierType()) {
 

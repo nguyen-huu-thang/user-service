@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package user.internal.authentication;
+
+option java_package = "vn.xime.user.grpc.internal.authentication";
+
+option java_multiple_files = true;
+
+import "internal/authentication/authentication_common.proto";
+
+
+// ==================================================
+// REGISTRATION SERVICE
+// ==================================================
+//
+// ⚠ INTERNAL API
+//
+// Identity Service
+// ->
+// User Service
+//
+// RESPONSIBILITY:
+//
+// - create user
+// - create credential
+// - initialize account state
+//
+// SECURITY:
+//
+// - internal gRPC only
+// - mTLS required
+//
+service RegistrationService {
+
+  // ==================================================
+  // REGISTER USER
+  // ==================================================
+  //
+  // Create new human account.
+  //
+  rpc RegisterUser (
+      RegisterUserRequest
+  ) returns (
+      RegisterUserResponse
+  );
+}
+
+
+// ==================================================
+// REGISTER USER REQUEST
+// ==================================================
+
+message RegisterUserRequest {
+
+  // Normalized identifier.
+  string identifier = 1;
+
+  IdentifierType identifier_type = 2;
+
+  // Raw credential.
+  //
+  // ⚠ KHÔNG được log.
+  string credential = 3;
+
+  CredentialType credential_type = 4;
+
+  // User-Agent / device metadata.
+  string user_agent = 5;
+
+  // Allocated target shard.
+  string shard_id = 6;
+}
+
+
+// ==================================================
+// REGISTER USER RESPONSE
+// ==================================================
+
+message RegisterUserResponse {
+
+  // Identity ID.
+  //
+  // Cũng chính là user ID.
+  string identity_id = 1;
+
+  // User shard id.
+  string shard_id = 2;
+
+  // Epoch millis.
+  int64 created_at = 3;
+}
