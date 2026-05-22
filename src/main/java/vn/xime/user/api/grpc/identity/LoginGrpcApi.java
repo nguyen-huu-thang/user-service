@@ -5,13 +5,10 @@ import lombok.RequiredArgsConstructor;
 import io.grpc.stub.StreamObserver;
 
 import org.springframework.grpc.server.service.GrpcService;
+import org.springframework.stereotype.Component;
 
-import vn.xime.user.application.usecase.identity
-    .LoginUseCase;
-
-import vn.xime.user.api.grpc.identity.mapper
-    .LoginGrpcMapper;
-
+import vn.xime.user.api.grpc.mapper.LoginGrpcMapper;
+import vn.xime.user.application.usecase.identity.LoginUseCase;
 import vn.xime.user.grpc.internal.authentication.LoginServiceGrpc;
 
 import vn.xime.user.grpc.internal.authentication.VerifyCredentialRequest;
@@ -48,7 +45,7 @@ import vn.xime.user.grpc.internal.authentication.VerifyCredentialResponse;
  *
  * =========================================================
  */
-@GrpcService
+@Component
 @RequiredArgsConstructor
 public class LoginGrpcApi extends LoginServiceGrpc.LoginServiceImplBase {
 
@@ -57,8 +54,7 @@ public class LoginGrpcApi extends LoginServiceGrpc.LoginServiceImplBase {
      * LOGIN USE CASE
      * =====================================================
      */
-    private final LoginUseCase
-        loginUseCase;
+    private final LoginUseCase loginUseCase;
 
 
     /**
@@ -66,8 +62,7 @@ public class LoginGrpcApi extends LoginServiceGrpc.LoginServiceImplBase {
      * GRPC MAPPER
      * =====================================================
      */
-    private final LoginGrpcMapper
-        loginGrpcMapper;
+    private final LoginGrpcMapper loginGrpcMapper;
 
 
     /**

@@ -1,26 +1,28 @@
-package vn.xime.user.api.grpc.identity.mapper;
+package vn.xime.user.api.grpc.mapper;
 
 import org.springframework.stereotype.Component;
 
 import io.grpc.Status;
 
-import vn.xime.user.domain.authentication.model
-    .IdentifierType;
+import vn.xime.user.domain.authentication.model.IdentifierType;
 
-import vn.xime.user.domain.credential.model
-    .CredentialType;
+import vn.xime.user.domain.authentication.model.VerifiedIdentity;
 
-import vn.xime.user.application.dto.external.identity
-    .RegisterUserRequest;
+import vn.xime.user.domain.credential.model.CredentialType;
 
-import vn.xime.user.application.dto.external.identity
-    .RegisterUserResponse;
+import vn.xime.user.application.dto.external.authentication.VerifyCredentialRequest;
+
+import vn.xime.user.application.dto.external.authentication.VerifyCredentialResponse;
+
+import vn.xime.user.domain.sharedkernel.service.IdService;
+
+import vn.xime.user.grpc.internal.authentication.VerifiedIdentityDto;
 
 
 
 /**
  * =========================================================
- * REGISTRATION GRPC MAPPER
+ * LOGIN GRPC MAPPER
  * =========================================================
  *
  * Mapper:
@@ -32,20 +34,20 @@ import vn.xime.user.application.dto.external.identity
  * =========================================================
  */
 @Component
-public class RegistrationGrpcMapper {
+public class LoginGrpcMapper {
 
     /**
      * =====================================================
      * PROTO -> APPLICATION REQUEST
      * =====================================================
      */
-    public RegisterUserRequest
+    public VerifyCredentialRequest
     toApplicationRequest(
         vn.xime.user.grpc.internal.authentication
-            .RegisterUserRequest request
+            .VerifyCredentialRequest request
     ) {
 
-        return new RegisterUserRequest(
+        return new VerifyCredentialRequest(
 
             request.getIdentifier(),
 
@@ -72,30 +74,100 @@ public class RegistrationGrpcMapper {
      * =====================================================
      */
     public vn.xime.user.grpc.internal.authentication
-        .RegisterUserResponse
+        .VerifyCredentialResponse
     toProtoResponse(
-        RegisterUserResponse response
+        VerifyCredentialResponse response
     ) {
 
-        return
+        var builder =
             vn.xime.user.grpc.internal.authentication
-                .RegisterUserResponse
+                .VerifyCredentialResponse
                 .newBuilder()
 
+                .setSuccess(
+                    response.success()
+                )
+
+                .setFailureReason(
+                    response.failureReason() == null
+                        ? ""
+                        : response.failureReason()
+                )
+
+                .setLocked(
+                    response.locked()
+                )
+
+                .setDisabled(
+                    response.disabled()
+                )
+
+                .setRequiresMfa(
+                    response.requiresMfa()
+                );
+
+
+        // =============================================
+        // VERIFIED IDENTITY
+        // =============================================
+
+        if (response.identity() != null) {
+
+            builder.setIdentity(
+                toProtoIdentity(
+                    response.identity()
+                )
+            );
+        }
+
+        return builder.build();
+    }
+
+
+    /**
+     * =====================================================
+     * VERIFIED IDENTITY
+     * =====================================================
+     */
+    private VerifiedIdentityDto
+    toProtoIdentity(
+        VerifiedIdentity identity
+    ) {
+
+        VerifiedIdentityDto.Builder builder =
+            VerifiedIdentityDto.newBuilder()
+
                 .setIdentityId(
-                    response.identityId()
+                    IdService.toString(
+                        identity.getIdentityId()
+                    )
+                )
+
+                .setSubjectType(
+                    identity.getSubjectType()
                 )
 
                 .setShardId(
-                    response.shardId()
+                    identity.getShardId()
                 )
 
-                .setCreatedAt(
-                    response.createdAt()
-                        .toEpochMilli()
-                )
+                .setServiceId(
+                    identity.getServiceId()
+                );
 
-                .build();
+
+        // =============================================
+        // OPTIONAL TENANT
+        // =============================================
+
+        if (identity.getTenantId() != null) {
+
+            builder.setTenantId(
+                identity.getTenantId()
+            );
+        }
+
+        return builder.build();
     }
 
 

@@ -24,7 +24,6 @@ public class UserMapper {
         requireNonNull(e.getPasswordHash(), "passwordHash");
         requireNonNull(e.getStatus(), "status");
         requireNonNull(e.getCreatedAt(), "createdAt");
-        requireNonNull(e.getUpdatedAt(), "updatedAt");
 
         return new User(
                 toId(e.getId()),

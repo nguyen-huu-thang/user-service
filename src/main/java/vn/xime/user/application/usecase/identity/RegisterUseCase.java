@@ -317,7 +317,7 @@ public class RegisterUseCase {
                 passwordHash,
                 UserStatus.ACTIVE,
                 now,
-                now
+                null
             );
 
 

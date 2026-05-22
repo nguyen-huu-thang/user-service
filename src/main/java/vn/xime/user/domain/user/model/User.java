@@ -30,7 +30,7 @@ public class User {
         this.passwordHash = Objects.requireNonNull(passwordHash);
         this.status = Objects.requireNonNull(status);
         this.createdAt = Objects.requireNonNull(createdAt);
-        this.updatedAt = Objects.requireNonNull(updatedAt);
+        this.updatedAt = updatedAt;
 
         validate();
     }

@@ -6,10 +6,8 @@ import io.grpc.stub.StreamObserver;
 
 import org.springframework.grpc.server.service.GrpcService;
 
+import vn.xime.user.api.grpc.mapper.RegistrationGrpcMapper;
 import vn.xime.user.application.usecase.identity.RegisterUseCase;
-
-import vn.xime.user.api.grpc.identity.mapper.RegistrationGrpcMapper;
-
 import vn.xime.user.grpc.internal.authentication.RegisterUserRequest;
 
 import vn.xime.user.grpc.internal.authentication.RegisterUserResponse;
@@ -50,8 +48,7 @@ public class RegistrationGrpcApi extends
      * REGISTER USE CASE
      * =====================================================
      */
-    private final RegisterUseCase
-        registerUseCase;
+    private final RegisterUseCase registerUseCase;
 
 
     /**
@@ -59,8 +56,7 @@ public class RegistrationGrpcApi extends
      * GRPC MAPPER
      * =====================================================
      */
-    private final RegistrationGrpcMapper
-        registrationGrpcMapper;
+    private final RegistrationGrpcMapper registrationGrpcMapper;
 
 
     /**
