@@ -55,8 +55,7 @@ public class VerifyAccessToken {
      * VERIFICATION KEY RESOLVER
      * =====================================================
      */
-    private final ResolveVerificationKey
-        resolveVerificationKey;
+    private final ResolveVerificationKey resolveVerificationKey;
 
 
     /**
@@ -64,8 +63,7 @@ public class VerifyAccessToken {
      * JWT VERIFIER
      * =====================================================
      */
-    private final JwtTokenVerifier
-        jwtVerifier;
+    private final JwtTokenVerifier jwtVerifier;
 
 
     /**
@@ -81,8 +79,7 @@ public class VerifyAccessToken {
      *
      * =====================================================
      */
-    private final ObjectMapper objectMapper =
-        new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
 
     /**
@@ -90,9 +87,7 @@ public class VerifyAccessToken {
      * VERIFY ACCESS TOKEN
      * =====================================================
      */
-    public JwtClaims execute(
-        String accessToken
-    ) {
+    public String execute(String accessToken) {
 
         /*
          * =================================================
@@ -100,10 +95,7 @@ public class VerifyAccessToken {
          * =================================================
          */
 
-        Id keyId =
-            extractKeyId(
-                accessToken
-            );
+        Id keyId = extractKeyId(accessToken);
 
 
         /*
@@ -133,11 +125,12 @@ public class VerifyAccessToken {
          * 3. VERIFY JWT
          * =================================================
          */
-
-        return jwtVerifier.verify(
+        JwtClaims jwtClaims = jwtVerifier.verify(
             accessToken,
             keyContext
         );
+        
+        return IdService.toString(jwtClaims.getIdentityId());
     }
 
 
