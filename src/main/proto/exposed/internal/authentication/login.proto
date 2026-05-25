@@ -7,7 +7,7 @@ option java_package =
 
 option java_multiple_files = true;
 
-import "internal/authentication/authentication_common.proto";
+import "exposed/internal/authentication/authentication_common.proto";
 
 
 // ==================================================

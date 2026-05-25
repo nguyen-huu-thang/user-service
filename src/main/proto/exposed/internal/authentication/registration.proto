@@ -6,7 +6,7 @@ option java_package = "vn.xime.user.grpc.internal.authentication";
 
 option java_multiple_files = true;
 
-import "internal/authentication/authentication_common.proto";
+import "exposed/internal/authentication/authentication_common.proto";
 
 
 // ==================================================
