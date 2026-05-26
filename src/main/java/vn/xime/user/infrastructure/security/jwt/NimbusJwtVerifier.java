@@ -141,8 +141,8 @@ public class NimbusJwtVerifier implements JwtTokenVerifier {
         } catch (Exception exception) {
 
             log.error(
-                "Cannot verify JWT",
-                exception
+                "Cannot verify JWT: {}",
+                exception.getMessage()
             );
 
             throw new RuntimeException(

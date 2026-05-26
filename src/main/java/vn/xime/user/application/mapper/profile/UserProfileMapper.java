@@ -2,8 +2,9 @@ package vn.xime.user.application.mapper.profile;
 
 import org.springframework.stereotype.Component;
 
-import vn.xime.user.application.dto.external.profile.CreateMyProfileResponse;
+import vn.xime.user.domain.sharedkernel.service.IdService;
 import vn.xime.user.domain.profile.model.UserProfile;
+import vn.xime.user.application.dto.external.profile.CreateMyProfileResponse;
 
 @Component
 public class UserProfileMapper {
@@ -14,7 +15,7 @@ public class UserProfileMapper {
 
         return new CreateMyProfileResponse(
 
-            profile.getUserId().toString(),
+            IdService.toString(profile.getUserId()),
 
             profile.getFullName(),
 
