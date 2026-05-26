@@ -11,25 +11,25 @@ import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.domain.sharedkernel.service.IdService;
 import vn.xime.user.domain.profile.model.UserProfile;
 
-import vn.xime.user.application.dto.external.profile.CreateMyProfileRequest;
 import vn.xime.user.application.dto.external.profile.MyProfileResponse;
+
 import vn.xime.user.application.mapper.profile.UserProfileMapper;
+
 import vn.xime.user.application.port.out.profile.UserProfileRepository;
 
 
 @Component
 @RequiredArgsConstructor
-public class CreateMyProfileUseCase {
+public class DeleteMyProfileAvatarUseCase {
 
     private final UserProfileRepository userProfileRepository;
-    
+
     private final UserProfileMapper mapper;
 
 
     @Transactional
     public MyProfileResponse execute(
-        String identifier,
-        CreateMyProfileRequest request
+        String identifier
     ) {
 
         /*
@@ -38,59 +38,39 @@ public class CreateMyProfileUseCase {
          * =========================
          */
 
-        Id userId = IdService.fromString(identifier);
+        Id userId = IdService.fromString(
+            identifier
+        );
 
 
         /*
          * =========================
-         * DUPLICATE CHECK
+         * LOAD PROFILE
          * =========================
          */
 
-        if (
-            userProfileRepository.existsByUserId(
-                userId
-            )
-        ) {
-
-            throw new IllegalStateException(
-                "User profile already exists"
-            );
-        }
+        UserProfile profile =
+            userProfileRepository
+                .findByUserId(userId)
+                .orElseThrow(
+                    () -> new IllegalStateException(
+                        "User profile not found"
+                    )
+                );
 
 
         /*
          * =========================
-         * CREATE PROFILE
+         * DELETE AVATAR
          * =========================
          */
 
         Instant now = Instant.now();
 
 
-        UserProfile profile =
-
-            new UserProfile(
-                userId,
-
-                request.fullName(),
-
-                request.displayName(),
-
-                request.dateOfBirth(),
-
-                request.gender(),
-
+        UserProfile updatedProfile =
+            profile.updateAvatar(
                 null,
-
-                request.bio(),
-
-                request.country(),
-
-                request.language(),
-
-                request.timezone(),
-
                 now
             );
 
@@ -101,10 +81,20 @@ public class CreateMyProfileUseCase {
          * =========================
          */
 
-        UserProfile savedProfile = userProfileRepository.save(
-            profile
-        );
+        UserProfile savedProfile =
+            userProfileRepository.save(
+                updatedProfile
+            );
 
-        return mapper.toMyProfileResponse(savedProfile);
+
+        /*
+         * =========================
+         * RESPONSE
+         * =========================
+         */
+
+        return mapper.toMyProfileResponse(
+            savedProfile
+        );
     }
 }

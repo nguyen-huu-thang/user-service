@@ -5,7 +5,7 @@ import java.time.LocalDate;
 
 import vn.xime.user.domain.profile.model.Gender;
 
-public record CreateMyProfileResponse(
+public record MyProfileResponse(
 
     String userId,
 

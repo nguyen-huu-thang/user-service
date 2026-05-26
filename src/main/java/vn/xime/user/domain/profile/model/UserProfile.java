@@ -93,6 +93,8 @@ public class UserProfile {
     public UserProfile updateBasicInfo(
             String fullName,
             String displayName,
+            LocalDate dateOfBirth,
+            Gender gender,
             String bio,
             Instant now
     ) {

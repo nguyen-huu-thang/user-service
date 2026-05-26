@@ -4,16 +4,16 @@ import org.springframework.stereotype.Component;
 
 import vn.xime.user.domain.sharedkernel.service.IdService;
 import vn.xime.user.domain.profile.model.UserProfile;
-import vn.xime.user.application.dto.external.profile.CreateMyProfileResponse;
+import vn.xime.user.application.dto.external.profile.MyProfileResponse;
 
 @Component
 public class UserProfileMapper {
     
-    public CreateMyProfileResponse toCreateMyProfileResponse(
+    public MyProfileResponse toMyProfileResponse(
         UserProfile profile
     ) {
 
-        return new CreateMyProfileResponse(
+        return new MyProfileResponse(
 
             IdService.toString(profile.getUserId()),
 
