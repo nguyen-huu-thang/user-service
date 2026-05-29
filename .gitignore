@@ -32,6 +32,10 @@ build/
 ### VS Code ###
 .vscode/
 
+### RUNTIME ###
+runtime/
+
+
 ### linh tinh
 cấu trúc thư mục.txt
 cơ sở dữ liệu.txt

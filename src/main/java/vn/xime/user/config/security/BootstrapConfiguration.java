@@ -100,8 +100,8 @@ public class BootstrapConfiguration {
 
         /**
          * Default:
-         * ./user/runtime/security/bootstrap.txt
+         * ./runtime/security/bootstrap.txt
          */
-        private String path = "./user/runtime/security/bootstrap.txt";
+        private String path = "./runtime/security/bootstrap.txt";
     }
 }

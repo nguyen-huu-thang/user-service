@@ -47,7 +47,7 @@ public class Bootstrap {
 
     public static final Path DEFAULT_BOOTSTRAP_PATH =
         Path.of(
-            "./user/runtime/security/bootstrap.txt"
+            "./runtime/security/bootstrap.txt"
         );
 
     // =====================================================

@@ -250,8 +250,8 @@ public class TrustCertificateSynchronizer {
         if (
             issuedAt != null
             && issuedAt.plus(
-                5,
-                ChronoUnit.MONTHS
+                150,
+                ChronoUnit.DAYS
             ).isAfter(now)
         ) {
 
