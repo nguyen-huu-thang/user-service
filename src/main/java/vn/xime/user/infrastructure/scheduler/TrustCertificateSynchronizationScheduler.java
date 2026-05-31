@@ -90,7 +90,8 @@ public class TrustCertificateSynchronizationScheduler {
      * =====================================================
      */
     @Scheduled(
-        fixedDelay = 24*60*60*1000
+        initialDelay = 24*60*60*1000L,
+        fixedDelay = 24*60*60*1000L
     )
     public void synchronize() {
 

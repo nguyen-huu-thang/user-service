@@ -8,10 +8,12 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
 import vn.xime.user.domain.authentication.model.KeyContext;
+
+import vn.xime.user.infrastructure.grpc.channel.GrpcChannelProvider;
+
 
 // =====================================================
 // GENERATED gRPC
@@ -30,24 +32,6 @@ import vn.xime.trust.grpc.external.key.PublicKeyDto;
  * gRPC TRUST KEY DISTRIBUTION CLIENT
  * =========================================================
  *
- * Low-level transport adapter.
- *
- * Responsibilities:
- *
- * - grpc communication
- * - protobuf request mapping
- * - protobuf response mapping
- * - network exception mapping
- * - grpc transport handling
- *
- * KHÔNG:
- *
- * - JWT verification
- * - runtime cache logic
- * - scheduler logic
- * - trust orchestration
- * - signing key management
- *
  * User-service only consumes:
  *
  * - public verification keys
@@ -63,8 +47,7 @@ public class GrpcTrustKeyDistributionClient {
      * TRUST SERVICE HOST
      * =====================================================
      */
-    private static final String HOST =
-        "localhost";
+    private static final String HOST = "localhost";
 
 
     /**
@@ -72,62 +55,56 @@ public class GrpcTrustKeyDistributionClient {
      * TRUST SERVICE PORT
      * =====================================================
      */
-    private static final int PORT =
-        9090;
+    private static final int PORT = 9090;
+
+
+    /**
+     * =====================================================
+     * CHANNEL PROVIDER
+     * =====================================================
+     */
+    private final GrpcChannelProvider channelProvider;
 
 
     /**
      * =====================================================
      * GET PUBLIC KEYS
      * =====================================================
-     *
-     * Verification flow.
-     *
-     * Returns:
-     *
-     * - public verification keys
-     *
-     * =====================================================
      */
     public List<KeyContext> getPublicKeys(
         String verifierServiceId
     ) {
 
-        ManagedChannel channel = buildChannel();
+        ManagedChannel channel =
+            channelProvider.getChannel(
+                HOST,
+                PORT
+            );
 
         try {
 
             KeyDistributionServiceGrpc
                 .KeyDistributionServiceBlockingStub stub =
 
-                    buildStub(channel);
-
-
-            GetPublicKeysRequest request =
-                GetPublicKeysRequest
-                    .newBuilder()
-
-                    .setVerifierServiceId(
-                        verifierServiceId
-                    )
-
-                    .build();
+                    buildStub(
+                        channel
+                    );
 
 
             GetPublicKeysResponse response =
                 stub.getPublicKeys(
-                    request
+                    buildRequest(
+                        verifierServiceId
+                    )
                 );
 
 
             return response
                 .getKeysList()
                 .stream()
-
                 .map(
                     this::mapPublicKey
                 )
-
                 .toList();
 
         } catch (StatusRuntimeException exception) {
@@ -142,35 +119,38 @@ public class GrpcTrustKeyDistributionClient {
 
     /**
      * =====================================================
-     * BUILD CHANNEL
-     * =====================================================
-     */
-    private ManagedChannel buildChannel() {
-
-        return ManagedChannelBuilder
-            .forAddress(
-                HOST,
-                PORT
-            )
-
-            .usePlaintext()
-
-            .build();
-    }
-
-
-    /**
-     * =====================================================
      * BUILD STUB
      * =====================================================
      */
     private KeyDistributionServiceGrpc
-        .KeyDistributionServiceBlockingStub buildStub(ManagedChannel channel) {
+        .KeyDistributionServiceBlockingStub buildStub(
+            ManagedChannel channel
+        ) {
 
         return KeyDistributionServiceGrpc
             .newBlockingStub(
                 channel
             );
+    }
+
+
+    /**
+     * =====================================================
+     * BUILD REQUEST
+     * =====================================================
+     */
+    private GetPublicKeysRequest buildRequest(
+        String verifierServiceId
+    ) {
+
+        return GetPublicKeysRequest
+            .newBuilder()
+
+            .setVerifierServiceId(
+                verifierServiceId
+            )
+
+            .build();
     }
 
 

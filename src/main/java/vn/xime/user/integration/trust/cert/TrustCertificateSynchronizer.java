@@ -8,12 +8,10 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
-import vn.xime.user.infrastructure.grpc.trust.cert.GrpcTrustCertificateClient;
-
-import vn.xime.user.infrastructure.security.bootstrap.Bootstrap;
-
 import vn.xime.user.integration.trust.model.Certificate;
-
+import vn.xime.user.integration.trust.ssl.TrustSslContextProvider;
+import vn.xime.user.infrastructure.grpc.trust.cert.GrpcTrustCertificateClient;
+import vn.xime.user.infrastructure.security.bootstrap.Bootstrap;
 import vn.xime.user.infrastructure.persistence.repository.CertificateRepository;
 
 
@@ -74,6 +72,13 @@ public class TrustCertificateSynchronizer {
      * =====================================================
      */
     private final Bootstrap bootstrap;
+
+    /**
+     * =====================================================
+     * SSL CONTEXT PROVIDER
+     * =====================================================
+     */
+    TrustSslContextProvider ssl;
 
 
     /**
@@ -196,6 +201,8 @@ public class TrustCertificateSynchronizer {
             certificate.get()
         );
 
+        ssl.reload();
+        
         certificateRepository.deleteExpiredCertificates(Instant.now());
     }
 

@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
+import vn.xime.user.infrastructure.grpc.channel.GrpcChannelProvider;
 
 import vn.xime.user.integration.trust.model.Certificate;
 
@@ -36,7 +36,6 @@ import vn.xime.trust.grpc.external.certificate.RotateCertificateResponse;
  * - protobuf request mapping
  * - protobuf response mapping
  * - network exception mapping
- * - grpc transport handling
  *
  * KHÔNG:
  *
@@ -70,15 +69,15 @@ public class GrpcTrustCertificateClient {
 
     /**
      * =====================================================
-     * ROTATE CERTIFICATE
+     * CHANNEL PROVIDER
      * =====================================================
-     *
-     * Returns:
-     *
-     * - new certificate
-     * - next refresh token
-     * - refresh token id
-     *
+     */
+    private final GrpcChannelProvider channelProvider;
+
+
+    /**
+     * =====================================================
+     * ROTATE CERTIFICATE
      * =====================================================
      */
     public Certificate rotateCertificate(
@@ -87,7 +86,11 @@ public class GrpcTrustCertificateClient {
         String privateKey
     ) {
 
-        ManagedChannel channel = buildChannel();
+        ManagedChannel channel =
+            channelProvider.getChannel(
+                HOST,
+                PORT
+            );
 
         try {
 
@@ -100,22 +103,11 @@ public class GrpcTrustCertificateClient {
 
 
             RotateCertificateRequest request =
-                RotateCertificateRequest
-                    .newBuilder()
-
-                    .setTokenId(
-                        tokenId
-                    )
-
-                    .setRefreshToken(
-                        refreshToken
-                    )
-
-                    .setPrivateKey(
-                        privateKey
-                    )
-
-                    .build();
+                buildRequest(
+                    tokenId,
+                    refreshToken,
+                    privateKey
+                );
 
 
             RotateCertificateResponse response =
@@ -134,30 +126,7 @@ public class GrpcTrustCertificateClient {
                 "trust-service certificate rotation failed",
                 exception
             );
-
-        } finally {
-
-            channel.shutdown();
         }
-    }
-
-
-    /**
-     * =====================================================
-     * BUILD CHANNEL
-     * =====================================================
-     */
-    private ManagedChannel buildChannel() {
-
-        return ManagedChannelBuilder
-            .forAddress(
-                HOST,
-                PORT
-            )
-
-            .usePlaintext()
-
-            .build();
     }
 
 
@@ -175,6 +144,36 @@ public class GrpcTrustCertificateClient {
             .newBlockingStub(
                 channel
             );
+    }
+
+
+    /**
+     * =====================================================
+     * BUILD REQUEST
+     * =====================================================
+     */
+    private RotateCertificateRequest buildRequest(
+        String tokenId,
+        String refreshToken,
+        String privateKey
+    ) {
+
+        return RotateCertificateRequest
+            .newBuilder()
+
+            .setTokenId(
+                tokenId
+            )
+
+            .setRefreshToken(
+                refreshToken
+            )
+
+            .setPrivateKey(
+                privateKey
+            )
+
+            .build();
     }
 
 
