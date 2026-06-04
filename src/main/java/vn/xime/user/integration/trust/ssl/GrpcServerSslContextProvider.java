@@ -153,16 +153,20 @@ public class GrpcServerSslContextProvider {
                 // forServer: cert vào constructor, khác với forClient dùng keyManager()
                 // forServer: cert goes into constructor, unlike forClient which uses keyManager()
                 .forServer(
-                    inputStream(
+                    certInputStream(
                         certificate.publicCertificate()
                     ),
-                    inputStream(
+                    privateKeyInputStream(
                         certificate.privateKey()
                     )
                 )
 
+                // JDK không hỗ trợ NPN_AND_ALPN mà gRPC server yêu cầu.
+                // BoringSSL (bundle sẵn trong grpc-netty-shaded) hỗ trợ cả hai.
+                // JDK does not support NPN_AND_ALPN required by gRPC server.
+                // BoringSSL (bundled in grpc-netty-shaded) supports both.
                 .sslProvider(
-                    SslProvider.JDK
+                    SslProvider.OPENSSL
                 )
 
                 .trustManager(
@@ -191,6 +195,11 @@ public class GrpcServerSslContextProvider {
      * =====================================================
      * INPUT STREAM
      * =====================================================
+     *
+     * Dùng cho root certificate — Trust Service gửi
+     * root cert đã có PEM headers sẵn.
+     *
+     * =====================================================
      */
     private InputStream inputStream(
         String value
@@ -198,6 +207,66 @@ public class GrpcServerSslContextProvider {
 
         return new ByteArrayInputStream(
             value.getBytes(
+                StandardCharsets.UTF_8
+            )
+        );
+    }
+
+
+    /**
+     * =====================================================
+     * CERT INPUT STREAM
+     * =====================================================
+     *
+     * Trust Service gửi service cert dưới dạng raw base64
+     * (không có PEM headers). Netty yêu cầu PEM format.
+     * Trust Service sends service cert as raw base64
+     * (no PEM headers). Netty requires PEM format.
+     *
+     * =====================================================
+     */
+    private InputStream certInputStream(
+        String value
+    ) {
+
+        String pem = value.startsWith("-----")
+            ? value
+            : "-----BEGIN CERTIFICATE-----\n"
+                + value
+                + "\n-----END CERTIFICATE-----\n";
+
+        return new ByteArrayInputStream(
+            pem.getBytes(
+                StandardCharsets.UTF_8
+            )
+        );
+    }
+
+
+    /**
+     * =====================================================
+     * PRIVATE KEY INPUT STREAM
+     * =====================================================
+     *
+     * Trust Service gửi private key dưới dạng raw base64
+     * PKCS#8. Netty yêu cầu PEM format.
+     * Trust Service sends private key as raw base64
+     * PKCS#8. Netty requires PEM format.
+     *
+     * =====================================================
+     */
+    private InputStream privateKeyInputStream(
+        String value
+    ) {
+
+        String pem = value.startsWith("-----")
+            ? value
+            : "-----BEGIN PRIVATE KEY-----\n"
+                + value
+                + "\n-----END PRIVATE KEY-----\n";
+
+        return new ByteArrayInputStream(
+            pem.getBytes(
                 StandardCharsets.UTF_8
             )
         );

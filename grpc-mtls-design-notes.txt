@@ -1,0 +1,188 @@
+================================================================================
+LƯU Ý THIẾT KẾ mTLS gRPC — Spring gRPC 1.0.x / gRPC Java 1.77+
+================================================================================
+
+Ghi lại 4 lỗi thực tế khi implement mTLS server-side cho User Service.
+Áp dụng cho bất kỳ service nào dùng Spring gRPC 1.0.x + grpc-netty-shaded.
+
+--------------------------------------------------------------------------------
+LỖI 1 — Sai tên interface (GrpcServerConfigurer không tồn tại)
+--------------------------------------------------------------------------------
+
+VẤN ĐỀ:
+  GrpcServerConfigurer không tồn tại trong Spring gRPC 1.0.x.
+  Lỗi: ClassNotFoundException: GrpcServerConfigurer
+
+NGUYÊN NHÂN:
+  Spring gRPC 0.x dùng GrpcServerConfigurer.
+  Spring gRPC 1.0.x đổi thành ServerBuilderCustomizer<T>.
+
+CÁCH ĐÚNG:
+  @Bean
+  ServerBuilderCustomizer<NettyServerBuilder> myCustomizer() {
+      return serverBuilder -> { ... };
+  }
+
+  Import: org.springframework.grpc.server.ServerBuilderCustomizer
+          io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
+
+LƯU Ý:
+  ServerBuilderCustomizer<NettyServerBuilder> chỉ nên dùng cho các
+  customization KHÔNG liên quan đến security (vd: keepAlive, maxInbound...).
+  Xem Lỗi 4 để hiểu tại sao không dùng cho SSL.
+
+--------------------------------------------------------------------------------
+LỖI 2 — Trust Service gửi cert dạng raw base64, không phải PEM
+--------------------------------------------------------------------------------
+
+VẤN ĐỀ:
+  Netty PEM parser tìm "-----BEGIN CERTIFICATE-----" không thấy.
+  Lỗi: CertificateException: found no certificates in input stream
+
+NGUYÊN NHÂN:
+  Trust Service gửi service cert và private key dưới dạng raw base64 DER.
+  Ví dụ: "MIICWDCCAf6gAw..." (không có header)
+  Root cert thì có PEM headers đầy đủ.
+
+CÁCH ĐÚNG:
+  Wrap PEM headers trước khi đưa vào Netty/gRPC:
+
+  private InputStream certInputStream(String value) {
+      String pem = value.startsWith("-----")
+          ? value
+          : "-----BEGIN CERTIFICATE-----\n" + value + "\n-----END CERTIFICATE-----\n";
+      return new ByteArrayInputStream(pem.getBytes(StandardCharsets.UTF_8));
+  }
+
+  private InputStream privateKeyInputStream(String value) {
+      String pem = value.startsWith("-----")
+          ? value
+          : "-----BEGIN PRIVATE KEY-----\n" + value + "\n-----END PRIVATE KEY-----\n";
+      return new ByteArrayInputStream(pem.getBytes(StandardCharsets.UTF_8));
+  }
+
+LƯU Ý:
+  - Private key từ Trust Service là PKCS#8 → header "-----BEGIN PRIVATE KEY-----"
+  - PKCS#1 EC key → "-----BEGIN EC PRIVATE KEY-----"
+  - PKCS#1 RSA key → "-----BEGIN RSA PRIVATE KEY-----"
+  - Check startsWith("-----") để phòng ngừa double-wrap nếu Trust Service
+    sau này sửa để gửi PEM format đúng.
+  - Root cert đã có PEM headers → dùng inputStream() thông thường.
+  - Lỗi này KHÔNG bị phát hiện ở client-side vì client SSL context là lazy
+    (chỉ build khi có gRPC call thực sự). Server SSL context build ngay
+    lúc startup nên mới lộ ra.
+
+--------------------------------------------------------------------------------
+LỖI 3 — JDK SSL provider không hỗ trợ NPN+ALPN (chỉ dành cho server)
+--------------------------------------------------------------------------------
+
+VẤN ĐỀ:
+  Lỗi: UnsupportedOperationException: JDK provider does not support NPN_AND_ALPN protocol
+
+NGUYÊN NHÂN:
+  GrpcSslContexts.forServer() yêu cầu NPN_AND_ALPN để backward-compatible
+  với gRPC client cũ. NPN là protocol cũ của Google, không bao giờ được
+  chuẩn hóa. JDK chỉ hỗ trợ ALPN (từ Java 9), không có NPN.
+
+  GrpcSslContexts.forClient() chỉ cần ALPN → JDK OK.
+  GrpcSslContexts.forServer() cần NPN_AND_ALPN → phải dùng BoringSSL.
+
+CÁCH ĐÚNG (nếu dùng Netty SslContext trực tiếp):
+  Server:  SslProvider.OPENSSL   ← BoringSSL bundle sẵn trong grpc-netty-shaded
+  Client:  SslProvider.JDK       ← JDK đủ dùng cho client
+
+LƯU Ý:
+  grpc-netty-shaded đã bundle sẵn netty-tcnative-boringssl-static.
+  SslProvider.OPENSSL hoạt động out-of-the-box trên Linux x86_64,
+  macOS, Windows x86_64 mà không cần cài thêm native library.
+
+  Tuy nhiên, xem Lỗi 4 — cách dùng Netty SslContext trực tiếp cho server
+  KHÔNG HOẠT ĐỘNG với Spring gRPC 1.0.x. Lỗi 3 chỉ cần biết nếu dùng
+  standalone grpc-netty, không cần Spring gRPC.
+
+--------------------------------------------------------------------------------
+LỖI 4 — Không thể gọi .sslContext() trên builder đã có ServerCredentials
+--------------------------------------------------------------------------------
+
+VẤN ĐỀ:
+  Lỗi: IllegalStateException: Cannot change security when using ServerCredentials
+  Xảy ra tại: NettyServerBuilder.sslContext(...)
+
+NGUYÊN NHÂN:
+  gRPC Java có 2 thế hệ API security:
+
+  API CŨ (trước 1.42):
+    NettyServerBuilder.forPort(port)
+        .sslContext(sslCtx)   ← dùng SslContext trực tiếp
+
+  API MỚI (từ 1.42):
+    NettyServerBuilder.forPort(port, ServerCredentials)
+        ← builder tạo với credentials, KHÔNG cho phép gọi .sslContext() nữa
+
+  Spring gRPC 1.0.x dùng API MỚI. Nó tạo NettyServerBuilder với
+  InsecureServerCredentials mặc định. Khi ServerBuilderCustomizer gọi
+  .sslContext(), gRPC Java throw vì đã có credentials từ constructor.
+
+CÁCH ĐÚNG:
+  Provide TlsServerCredentials bean. Spring gRPC có:
+  @ConditionalOnMissingBean(ServerCredentials.class)
+  → bean của mình sẽ thay thế InsecureServerCredentials mặc định.
+
+  @Bean
+  @DependsOn("trustCertificateSynchronizationScheduler")
+  ServerCredentials grpcServerMtlsCredentials(
+      TrustCertificateResolver certResolver,
+      TrustRootCertificateResolver rootCertResolver
+  ) throws IOException {
+
+      Certificate cert = certResolver.resolve().orElseThrow(...);
+      String rootCert = rootCertResolver.resolve().orElseThrow(...);
+
+      return TlsServerCredentials.newBuilder()
+          .keyManager(certInputStream(cert.publicCertificate()),
+                      privateKeyInputStream(cert.privateKey()))
+          .trustManager(inputStream(rootCert))
+          .clientAuth(TlsServerCredentials.ClientAuth.REQUIRE)
+          .build();
+  }
+
+  Import: io.grpc.ServerCredentials
+          io.grpc.TlsServerCredentials
+
+LƯU Ý — @DependsOn quan trọng:
+  TlsServerCredentials bean được tạo trong Spring bean initialization phase.
+  Cert được load vào resolver bởi @PostConstruct của scheduler.
+  KHÔNG có @DependsOn → Spring không đảm bảo thứ tự → cert có thể chưa
+  sẵn sàng khi bean được tạo → IllegalStateException "runtime certificate not found".
+  @DependsOn("trustCertificateSynchronizationScheduler") buộc scheduler
+  phải khởi tạo xong (kể cả @PostConstruct) trước khi bean credentials được tạo.
+
+LƯU Ý — TlsServerCredentials.ClientAuth vs Netty ClientAuth:
+  Netty:  io.grpc.netty.shaded.io.netty.handler.ssl.ClientAuth.REQUIRE
+  gRPC:   io.grpc.TlsServerCredentials.ClientAuth.REQUIRE
+  Khi dùng TlsServerCredentials phải dùng gRPC ClientAuth, không phải Netty.
+
+--------------------------------------------------------------------------------
+TÓM TẮT — CHECKLIST KHI IMPLEMENT mTLS SERVER VỚI SPRING gRPC 1.0.x
+--------------------------------------------------------------------------------
+
+[ ] Dùng ServerCredentials bean, KHÔNG dùng ServerBuilderCustomizer.sslContext()
+[ ] Import io.grpc.TlsServerCredentials (không phải Netty class)
+[ ] Wrap PEM headers cho service cert và private key từ Trust Service
+[ ] Root cert đã có PEM headers → không cần wrap
+[ ] Dùng TlsServerCredentials.ClientAuth.REQUIRE (không phải Netty ClientAuth)
+[ ] Thêm @DependsOn cho bean nào cần cert từ resolver lúc startup
+[ ] Server credentials được tạo 1 lần lúc startup — rotation cần restart server
+    hoặc implement cơ chế phức tạp hơn (xem xét sau)
+
+--------------------------------------------------------------------------------
+MÔI TRƯỜNG ĐÃ TEST
+--------------------------------------------------------------------------------
+
+Spring Boot:    4.0.3
+Spring gRPC:    1.0.2 (spring-grpc-server-spring-boot-starter)
+gRPC Java:      1.77.1 (grpc-netty-shaded)
+Java:           25.0.3
+OS:             Windows 11
+
+================================================================================
