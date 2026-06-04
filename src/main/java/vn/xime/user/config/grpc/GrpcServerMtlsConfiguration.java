@@ -73,7 +73,7 @@ public class GrpcServerMtlsConfiguration {
      * =====================================================
      */
     @Bean
-    @DependsOn("trustCertificateSynchronizationScheduler")
+    @DependsOn({ "trustCertificateSynchronizationScheduler", "trustRootCertificateInitializer" })
     ServerCredentials grpcServerCredentials(
         TrustCertificateResolver trustCertificateResolver,
         TrustRootCertificateResolver trustRootCertificateResolver

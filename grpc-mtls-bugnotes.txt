@@ -1,0 +1,308 @@
+GHI CHÚ DEBUG — mTLS gRPC (User Service)
+Ngày ghi: 2026-06-04
+============================================================
+
+Tham chiếu: identity/grpc-mtls-bugnotes.txt cho BUG 1–3 (lỗi PEM, SslProvider.JDK,
+plaintext mismatch) — những lỗi đó cũng áp dụng cho User Service và đã được fix.
+
+File này ghi thêm các lỗi đặc thù khi thêm mTLS vào User Service + phát hiện
+mới về cách Spring gRPC 1.0.2 thực sự hoạt động.
+
+
+============================================================
+PHÁT HIỆN QUAN TRỌNG — Cơ chế TLS của Spring gRPC 1.0.2
+============================================================
+
+STTSS  Spring gRPC 1.0.2 KHÔNG dùng ServerCredentials bean.
+
+Dựa vào decompile JAR spring-grpc-server-spring-boot-autoconfigure-1.0.2.jar,
+method shadedNettyGrpcServerFactory() có signature:
+
+    shadedNettyGrpcServerFactory(
+        GrpcServerProperties,
+        GrpcServiceDiscoverer,
+        GrpcServiceConfigurer,
+        ServerBuilderCustomizers,
+        SslBundles,                          ← Spring Boot SSL Bundle API
+        ObjectProvider<GrpcServerFactoryCustomizer>
+    )
+
+ShadedNettyGrpcServerFactory constructor nhận:
+
+    ShadedNettyGrpcServerFactory(
+        String address,
+        List<ServerBuilderCustomizer<NettyServerBuilder>>,
+        KeyManagerFactory,                   ← lấy từ SslBundle
+        TrustManagerFactory,                 ← lấy từ SslBundle
+        TlsServerCredentials.ClientAuth
+    )
+
+Tức là factory đọc KeyManagerFactory và TrustManagerFactory từ SslBundle,
+KHÔNG phải từ ServerCredentials bean.
+
+HẬU QUẢ:
+  - Tạo @Bean ServerCredentials grpcServerCredentials(...) KHÔNG có tác dụng
+  - Dù bean được tạo thành công, Spring gRPC hoàn toàn bỏ qua nó
+  - Đây là nguyên nhân server vẫn chạy plaintext dù bean tồn tại
+
+CÁCH ĐÚNG (Spring gRPC 1.0.2):
+  Dùng Spring Boot SslBundleRegistry để đăng ký bundle, sau đó cấu hình:
+    spring.grpc.server.ssl.enabled=true
+    spring.grpc.server.ssl.bundle=<tên-bundle>
+    spring.grpc.server.ssl.client-auth=REQUIRE
+
+
+============================================================
+BUG A — SslProvider.JDK trong TrustSslContextProvider
+============================================================
+Lỗi đầy đủ:
+  java.lang.UnsupportedOperationException: JDK provider does not support
+  NPN_AND_ALPN protocol (tương tự BUG 2 trong identity notes)
+
+File:
+  TrustSslContextProvider.java (client SSL context, kết nối tới Trust Service)
+
+Nguyên nhân:
+  Code dùng .sslProvider(SslProvider.JDK) khi build GrpcSslContexts.forClient().
+  gRPC yêu cầu ALPN, JDK provider của Netty không hỗ trợ.
+
+Fix:
+  Xóa dòng .sslProvider(SslProvider.JDK) khỏi TrustSslContextProvider.
+  GrpcSslContexts tự chọn provider phù hợp (BoringSSL đã bundle trong grpc-netty-shaded).
+
+  Sai:
+    GrpcSslContexts.forClient()
+        .sslProvider(SslProvider.JDK)   ← xóa dòng này
+        .trustManager(...)
+        .build();
+
+  Đúng:
+    GrpcSslContexts.forClient()
+        .trustManager(...)
+        .build();
+
+
+============================================================
+BUG B — Server gRPC chạy plaintext dù đã cấu hình TLS
+============================================================
+Lỗi trên User Service (server nhận TLS ClientHello):
+  io.grpc.netty.shaded.io.netty.codec.http2.Http2Exception:
+  HTTP/2 client preface string missing or corrupt.
+  Hex dump for received bytes: 16030100de...
+
+Lỗi trên Identity Service (client nhận plaintext từ User Service server):
+  io.grpc.netty.shaded.io.netty.handler.ssl.NotSslRecordException:
+  not an SSL/TLS record: 00001204...
+
+Hex dump giải thích:
+  16 03 01 ... = TLS ClientHello (client gửi TLS, server là plaintext)
+  00 00 12 04 ... = HTTP/2 SETTINGS frame (server gửi plaintext, client có TLS)
+
+Nguyên nhân:
+  Như đã nêu trong phần "Phát hiện quan trọng" ở trên:
+  Spring gRPC 1.0.2 KHÔNG dùng @Bean ServerCredentials để cấu hình server.
+  Server vẫn chạy InsecureServerCredentials (plaintext).
+
+  Các cách tiếp cận SAI đã thử và không hoạt động:
+  1. @Bean ServerCredentials grpcServerMtlsCredentials(...) - bị bỏ qua
+  2. @Bean ServerCredentials grpcServerCredentials(...) - đổi tên cũng không dùng
+  3. TlsServerCredentials.newBuilder()...build() - không có cách inject vào factory
+
+Fix:
+  Dùng SslBundleRegistry (xem BUG C để biết chi tiết).
+
+
+============================================================
+BUG C — Cách đăng ký SSL bundle trong Spring Boot 4.x
+============================================================
+Lỗi:
+  The import org.springframework.boot.ssl.SslBundleRegistrar cannot be resolved
+  SslBundleRegistrar cannot be resolved to a type
+
+Nguyên nhân:
+  SslBundleRegistrar (tồn tại trong Spring Boot 3.x) đã bị LOẠI BỎ trong
+  Spring Boot 4.0.x. Không còn interface này nữa.
+
+Fix trong Spring Boot 4.x:
+  1. Tạo component implement ServerBuilderCustomizer<NettyServerBuilder> (no-op)
+  2. Inject SslBundleRegistry trực tiếp vào constructor
+  3. Dùng @PostConstruct để gọi sslBundleRegistry.registerBundle(name, bundle)
+  4. @DependsOn đảm bảo cert đã được load trước
+
+  Vì sao implement ServerBuilderCustomizer (dù là no-op)?
+  → ShadedNettyGrpcServerFactory phụ thuộc vào ServerBuilderCustomizers (tập
+    hợp tất cả ServerBuilderCustomizer beans)
+  → Nếu component của chúng ta implement ServerBuilderCustomizer, factory phải
+    đợi component được tạo xong (bao gồm @PostConstruct)
+  → @PostConstruct đăng ký bundle → TRƯỚC KHI factory đọc SslBundles → TLS hoạt động
+
+  Thứ tự đảm bảo:
+  1. trustCertificateSynchronizationScheduler @PostConstruct → load service cert từ DB
+  2. trustRootCertificateInitializer @PostConstruct → load root CA từ file
+  3. MtlsSslBundleRegistrar tạo (@DependsOn cả hai) → @PostConstruct → đăng ký bundle
+  4. ServerBuilderCustomizers thu thập tất cả ServerBuilderCustomizer beans (kể cả bean của chúng ta)
+  5. ShadedNettyGrpcServerFactory nhận SslBundles (đã có bundle) → TLS được cấu hình
+
+  Cấu hình application.yml:
+    spring:
+      grpc:
+        server:
+          ssl:
+            enabled: true
+            bundle: user-grpc-mtls
+            client-auth: REQUIRE
+
+
+============================================================
+BUG D — DependsOn thiếu trustRootCertificateInitializer
+============================================================
+Lỗi:
+  java.lang.IllegalStateException: root certificate not found — ca-cert chưa được load
+
+Nguyên nhân:
+  MtlsSslBundleRegistrar ban đầu chỉ có @DependsOn("trustCertificateSynchronizationScheduler").
+  Nhưng root CA certificate được load bởi TrustRootCertificateInitializer (bean khác,
+  đọc file từ filesystem), không phải bởi scheduler.
+
+Fix:
+  @DependsOn({ "trustCertificateSynchronizationScheduler", "trustRootCertificateInitializer" })
+
+  Hai nguồn cert cần @DependsOn:
+  - trustCertificateSynchronizationScheduler → load service cert (public cert + private key) từ DB
+  - trustRootCertificateInitializer → load root CA cert từ file (./runtime/security/...)
+
+
+============================================================
+BUG E — JKS KeyStore password null
+============================================================
+Lỗi:
+  java.security.UnrecoverableKeyException: Password must not be null
+  at DefaultSslManagerBundle.getKeyManagerFactory(DefaultSslManagerBundle.java:62)
+
+Nguyên nhân:
+  SslStoreBundle.of(keyStore, null, trustStore) truyền null làm keyStorePassword.
+  Spring Boot's DefaultSslManagerBundle gọi factory.init(keyStore, null).
+  JKS KeyStore.getKey() từ chối null password (kể cả khi key được set với empty password).
+
+Fix:
+  Thay null bằng "" (empty string):
+    SslStoreBundle.of(keyStore, "", trustStore)
+
+  Tương ứng với cách set key entry:
+    keyStore.setKeyEntry("server", privateKey, new char[0], certs)
+
+  "" → "".toCharArray() = new char[0] → khớp với password khi set key entry.
+
+
+============================================================
+BUG F — Trust Root CA không phải là CA certificate
+============================================================
+Lỗi trên Identity Service (client verifying User Service server cert):
+  sun.security.validator.ValidatorException: TrustAnchor with subject
+  "OU=Trust Service, O=Platform, CN=Trust Root CA" is not a CA certificate
+
+Lỗi xảy ra tại:
+  sun.security.ssl.X509TrustManagerImpl.checkServerTrusted
+
+Nguyên nhân:
+  Trust Service cấp root CA certificate KHÔNG có BasicConstraints extension
+  với cA=TRUE. Từ JDK 8u141+, PKIX validator (PKIXValidator.verifyTrustAnchor)
+  bắt buộc trust anchor phải là CA cert (có cA=TRUE).
+
+  Lỗi này chỉ lộ ra sau khi fix BUG B (plaintext server) — trước đó TLS handshake
+  không bao giờ đến được bước verify cert vì server là plaintext.
+
+Fix ngắn hạn (workaround):
+  Dùng algorithm "SunX509" thay vì "PKIX" (default) cho TrustManagerFactory.
+  SunX509 dùng SimpleValidator (không dùng PKIXValidator) → không enforce cA=TRUE.
+
+  Trong MtlsSslBundleRegistrar (User Service server — verify client cert từ Identity):
+    TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+    tmf.init(trustStore);
+
+    // Kết hợp với SslManagerBundle để truyền tmf thủ công:
+    SslManagerBundle managers = SslManagerBundle.of(kmf, tmf);
+    SslBundle bundle = SslBundle.of(storeBundle, SslBundleKey.NONE, SslOptions.NONE, "TLS", managers);
+
+  Trong Identity Service TrustSslContextProvider (client — verify User Service server cert):
+    // Tương tự: dùng SunX509 hoặc custom TrustManager
+
+Fix đúng dài hạn:
+  Trust Service cần cấp root CA cert với:
+    - BasicConstraints: CA:TRUE (bắt buộc)
+    - KeyUsage: keyCertSign, cRLSign (nên có)
+    - pathLenConstraint: 0 (nếu không cần intermediate CA)
+
+  Các service client sẽ tiếp tục dùng cert này, và PKIX validation sẽ pass.
+
+Lưu ý khi dùng SunX509 workaround:
+  - Chỉ kiểm tra chữ ký, không kiểm tra full certificate path
+  - Phù hợp cho môi trường nội bộ tin cậy
+  - Không phải giải pháp cho production nếu bảo mật cao là yêu cầu
+
+
+============================================================
+CHECKLIST KHI THÊM mTLS CHO USER SERVICE (đã xác nhận hoạt động)
+============================================================
+
+Server TLS (gRPC server nhận incoming connections):
+  [ ] KHÔNG dùng @Bean ServerCredentials — Spring gRPC 1.0.2 bỏ qua nó
+  [ ] Tạo MtlsSslBundleRegistrar implements ServerBuilderCustomizer<NettyServerBuilder>
+  [ ] @DependsOn("trustCertificateSynchronizationScheduler", "trustRootCertificateInitializer")
+  [ ] Inject SslBundleRegistry, @PostConstruct đăng ký bundle
+  [ ] Dùng SslStoreBundle.of(keyStore, "", trustStore) — password rỗng, không null
+  [ ] Dùng TrustManagerFactory.getInstance("SunX509") nếu root CA cert thiếu cA=TRUE
+  [ ] Dùng SslManagerBundle.of(kmf, tmf) + SslBundle.of(..., managers) để inject tmf thủ công
+  [ ] Cấu hình application.yml: ssl.enabled=true, ssl.bundle=user-grpc-mtls, ssl.client-auth=REQUIRE
+
+Client TLS (gRPC channel kết nối tới Trust Service, Identity Service...):
+  [ ] KHÔNG dùng .sslProvider(SslProvider.JDK) — JDK không hỗ trợ ALPN
+  [ ] Để GrpcSslContexts tự chọn provider (BoringSSL)
+  [ ] Nếu root CA cert thiếu cA=TRUE: dùng SunX509 hoặc custom TrustManager
+
+Cert format:
+  [ ] Trust Service gửi raw base64 DER → phải wrap PEM header trước khi dùng
+  [ ] Certificate: "-----BEGIN CERTIFICATE-----\n" + base64 + "\n-----END CERTIFICATE-----\n"
+  [ ] Private key PKCS#8: "-----BEGIN PRIVATE KEY-----\n" + base64 + "\n-----END PRIVATE KEY-----\n"
+  [ ] Root CA cert từ file thường đã có PEM headers sẵn
+
+Key parsing:
+  [ ] Dùng PKCS8EncodedKeySpec, thử RSA trước rồi EC (algorithm embedded trong DER)
+  [ ] JKS KeyStore dùng new char[0] làm key entry password
+
+Thứ tự startup:
+  [ ] trustRootCertificateInitializer chạy trước MtlsSslBundleRegistrar
+  [ ] trustCertificateSynchronizationScheduler chạy trước MtlsSslBundleRegistrar
+  [ ] MtlsSslBundleRegistrar @PostConstruct chạy trước ShadedNettyGrpcServerFactory
+      (đảm bảo bằng cách implement ServerBuilderCustomizer<NettyServerBuilder>)
+
+
+============================================================
+CHECKLIST IDENTITY SERVICE (cần áp dụng tương tự)
+============================================================
+
+Identity Service cần fix cùng lỗi BUG F (TrustAnchor not a CA cert) vì:
+  - Identity Service gọi User Service gRPC bằng mTLS channel
+  - Trust manager của Identity Service dùng PKIX → reject User Service cert chain
+  - Lỗi: "TrustAnchor with subject 'CN=Trust Root CA' is not a CA certificate"
+
+Fix cho Identity Service:
+  Trong TrustSslContextProvider.buildSslContext() hoặc GrpcChannelProvider:
+  - Thay .trustManager(InputStream) bằng custom TrustManager dùng SunX509 algorithm
+  - Hoặc tạo TrustManagerFactory với "SunX509" rồi dùng .trustManager(tmf)
+
+  Ví dụ:
+    // Thay vì (dùng PKIX, sẽ fail với non-CA root cert):
+    GrpcSslContexts.forClient()
+        .trustManager(inputStream(rootCertificate))
+        ...
+
+    // Dùng:
+    KeyStore trustStore = KeyStore.getInstance("JKS");
+    trustStore.load(null, null);
+    trustStore.setCertificateEntry("root-ca", rootCaCert);
+    TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+    tmf.init(trustStore);
+    GrpcSslContexts.forClient()
+        .trustManager(tmf)
+        ...
