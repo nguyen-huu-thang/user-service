@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 
 import io.grpc.stub.StreamObserver;
 
-import org.springframework.grpc.server.service.GrpcService;
+import org.springframework.stereotype.Service;
 
 import vn.xime.user.api.grpc.mapper.RegistrationGrpcMapper;
 import vn.xime.user.application.usecase.identity.RegisterUseCase;
@@ -37,7 +37,7 @@ import vn.xime.user.grpc.internal.authentication.RegistrationServiceGrpc;
  *
  * =========================================================
  */
-@GrpcService
+@Service
 @RequiredArgsConstructor
 public class RegistrationGrpcApi extends
     RegistrationServiceGrpc

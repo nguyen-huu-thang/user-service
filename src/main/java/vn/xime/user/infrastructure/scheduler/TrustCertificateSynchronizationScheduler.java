@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 
 import vn.xime.user.integration.trust.cert.TrustCertificateSynchronizer;
+import vn.xime.user.integration.trust.publicca.TrustRootCertificateInitializer;
 
 
 /**
@@ -38,6 +39,13 @@ public class TrustCertificateSynchronizationScheduler {
 
     /**
      * =====================================================
+     * TRUST ROOT CERTIFICATE INITIALIZER
+     * =====================================================
+     */
+    private final TrustRootCertificateInitializer trustRootCertificateInitializer;
+
+    /**
+     * =====================================================
      * TRUST CERTIFICATE SYNCHRONIZER
      * =====================================================
      */
@@ -58,6 +66,8 @@ public class TrustCertificateSynchronizationScheduler {
     public void startup() {
 
         try {
+
+            trustRootCertificateInitializer.initialize();
 
             trustCertificateSynchronizer
                 .synchronizeOnStartup();

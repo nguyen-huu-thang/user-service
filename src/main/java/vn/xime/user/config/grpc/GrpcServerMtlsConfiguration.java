@@ -56,7 +56,8 @@ import vn.xime.user.integration.trust.publicca.TrustRootCertificateResolver;
  *
  * =========================================================
  */
-@Configuration
+// @Configuration removed — Spring gRPC 1.0.2 does not use @Bean ServerCredentials.
+// Replaced by GrpcServerConfig + GrpcServerCredentialsProvider (Custom NettyServerBuilder).
 public class GrpcServerMtlsConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(GrpcServerMtlsConfiguration.class);

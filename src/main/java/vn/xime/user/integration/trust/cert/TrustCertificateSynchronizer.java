@@ -216,6 +216,10 @@ public class TrustCertificateSynchronizer {
 
         Certificate bootstrapCertificate = bootstrap.load();
 
+        publish(
+            bootstrapCertificate
+        );
+
         Certificate rotatedCertificate =
             rotateCertificate(
                 bootstrapCertificate

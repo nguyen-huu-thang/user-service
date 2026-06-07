@@ -1,7 +1,5 @@
 package vn.xime.user.integration.trust.publicca;
 
-import jakarta.annotation.PostConstruct;
-
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -73,7 +71,6 @@ public class TrustRootCertificateInitializer {
      *
      * =====================================================
      */
-    @PostConstruct
     public void initialize() {
 
         try {
