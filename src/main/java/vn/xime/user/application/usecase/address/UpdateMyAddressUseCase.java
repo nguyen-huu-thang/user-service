@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.domain.sharedkernel.service.IdService;
+import vn.xime.user.domain.sharedkernel.error.ErrorCode;
+import vn.xime.user.domain.sharedkernel.error.PublicError;
 import vn.xime.user.domain.address.model.UserAddress;
 
 import vn.xime.user.application.dto.external.address.AddressResponse;
@@ -55,8 +57,8 @@ public class UpdateMyAddressUseCase {
         UserAddress address =
             userAddressRepository.findById(id)
                 .orElseThrow(
-                    () -> new IllegalArgumentException(
-                        "address not found"
+                    () -> new PublicError(
+                        ErrorCode.ADDRESS_NOT_FOUND
                     )
                 );
 
@@ -69,8 +71,8 @@ public class UpdateMyAddressUseCase {
 
         if (!address.getUserId().equals(userId)) {
 
-            throw new IllegalArgumentException(
-                "address not found"
+            throw new PublicError(
+                ErrorCode.ADDRESS_NOT_FOUND
             );
         }
 

@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.xime.user.domain.sharedkernel.factory.IdFactory;
 import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.domain.sharedkernel.service.IdService;
+import vn.xime.user.domain.sharedkernel.error.ErrorCode;
+import vn.xime.user.domain.sharedkernel.error.PublicError;
 import vn.xime.user.domain.interest.model.Interest;
 import vn.xime.user.domain.interest.model.UserInterest;
 
@@ -58,8 +60,8 @@ public class AddMyInterestUseCase {
         Interest interest =
             interestRepository.findById(iId)
                 .orElseThrow(
-                    () -> new IllegalArgumentException(
-                        "interest not found"
+                    () -> new PublicError(
+                        ErrorCode.INTEREST_NOT_FOUND
                     )
                 );
 
@@ -80,8 +82,8 @@ public class AddMyInterestUseCase {
 
         if (alreadyAdded) {
 
-            throw new IllegalArgumentException(
-                "interest already added"
+            throw new PublicError(
+                ErrorCode.INTEREST_ALREADY_ADDED
             );
         }
 

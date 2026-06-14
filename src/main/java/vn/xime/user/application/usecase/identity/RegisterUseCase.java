@@ -15,6 +15,8 @@ import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.domain.sharedkernel.service.IdService;
 import vn.xime.user.domain.user.model.User;
 import vn.xime.user.domain.user.model.UserStatus;
+import vn.xime.user.domain.sharedkernel.error.ErrorCode;
+import vn.xime.user.domain.sharedkernel.error.PublicError;
 
 import vn.xime.user.application.service.identity.CheckIdentifierAvailabilityService;
 
@@ -202,8 +204,8 @@ public class RegisterUseCase {
 
         if (alreadyExists) {
 
-            throw new IllegalArgumentException(
-                "identifier already exists"
+            throw new PublicError(
+                ErrorCode.IDENTIFIER_ALREADY_EXISTS
             );
         }
 

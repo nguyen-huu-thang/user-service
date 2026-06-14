@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.domain.sharedkernel.service.IdService;
+import vn.xime.user.domain.sharedkernel.error.ErrorCode;
+import vn.xime.user.domain.sharedkernel.error.PublicError;
 import vn.xime.user.domain.contact.model.UserLink;
 
 import vn.xime.user.application.port.out.address.UserLinkRepository;
@@ -49,8 +51,8 @@ public class DeleteMyLinkUseCase {
         UserLink link =
             userLinkRepository.findById(id)
                 .orElseThrow(
-                    () -> new IllegalArgumentException(
-                        "link not found"
+                    () -> new PublicError(
+                        ErrorCode.LINK_NOT_FOUND
                     )
                 );
 
@@ -63,8 +65,8 @@ public class DeleteMyLinkUseCase {
 
         if (!link.getUserId().equals(userId)) {
 
-            throw new IllegalArgumentException(
-                "link not found"
+            throw new PublicError(
+                ErrorCode.LINK_NOT_FOUND
             );
         }
 

@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.xime.user.domain.sharedkernel.factory.IdFactory;
 import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.domain.sharedkernel.service.IdService;
+import vn.xime.user.domain.sharedkernel.error.ErrorCode;
+import vn.xime.user.domain.sharedkernel.error.PublicError;
 import vn.xime.user.domain.contact.model.UserContact;
 
 import vn.xime.user.application.dto.external.contact.AddContactRequest;
@@ -58,8 +60,8 @@ public class AddMyContactUseCase {
 
         if (alreadyExists) {
 
-            throw new IllegalArgumentException(
-                "contact already exists"
+            throw new PublicError(
+                ErrorCode.CONTACT_ALREADY_EXISTS
             );
         }
 

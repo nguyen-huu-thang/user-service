@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.domain.sharedkernel.service.IdService;
+import vn.xime.user.domain.sharedkernel.error.ErrorCode;
+import vn.xime.user.domain.sharedkernel.error.PublicError;
 import vn.xime.user.domain.contact.model.UserContact;
 
 import vn.xime.user.application.port.out.contact.UserContactRepository;
@@ -49,8 +51,8 @@ public class DeleteMyContactUseCase {
         UserContact contact =
             userContactRepository.findById(id)
                 .orElseThrow(
-                    () -> new IllegalArgumentException(
-                        "contact not found"
+                    () -> new PublicError(
+                        ErrorCode.CONTACT_NOT_FOUND
                     )
                 );
 
@@ -63,8 +65,8 @@ public class DeleteMyContactUseCase {
 
         if (!contact.getUserId().equals(userId)) {
 
-            throw new IllegalArgumentException(
-                "contact not found"
+            throw new PublicError(
+                ErrorCode.CONTACT_NOT_FOUND
             );
         }
 

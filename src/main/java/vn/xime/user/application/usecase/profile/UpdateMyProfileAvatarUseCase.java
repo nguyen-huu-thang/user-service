@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.domain.sharedkernel.service.IdService;
+import vn.xime.user.domain.sharedkernel.error.ErrorCode;
+import vn.xime.user.domain.sharedkernel.error.PublicError;
 import vn.xime.user.domain.profile.model.UserProfile;
 
 import vn.xime.user.application.dto.external.profile.MyProfileResponse;
@@ -57,8 +59,8 @@ public class UpdateMyProfileAvatarUseCase {
             userProfileRepository
                 .findByUserId(userId)
                 .orElseThrow(
-                    () -> new IllegalStateException(
-                        "User profile not found"
+                    () -> new PublicError(
+                        ErrorCode.PROFILE_NOT_FOUND
                     )
                 );
 

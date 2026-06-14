@@ -2,8 +2,6 @@ package vn.xime.user.api.grpc.mapper;
 
 import org.springframework.stereotype.Component;
 
-import io.grpc.Status;
-
 import vn.xime.user.domain.authentication.model.IdentifierType;
 
 import vn.xime.user.domain.credential.model.CredentialType;
@@ -159,41 +157,5 @@ public class RegistrationGrpcMapper {
                     "unsupported credential type"
                 );
         };
-    }
-
-
-    // =====================================================
-    // ERROR MAPPER
-    // =====================================================
-
-    public RuntimeException toStatus(
-        Exception exception
-    ) {
-
-        if (exception
-            instanceof IllegalArgumentException) {
-
-            return Status.INVALID_ARGUMENT
-                .withDescription(
-                    exception.getMessage()
-                )
-                .asRuntimeException();
-        }
-
-        if (exception
-            instanceof IllegalStateException) {
-
-            return Status.FAILED_PRECONDITION
-                .withDescription(
-                    exception.getMessage()
-                )
-                .asRuntimeException();
-        }
-
-        return Status.INTERNAL
-            .withDescription(
-                exception.getMessage()
-            )
-            .asRuntimeException();
     }
 }

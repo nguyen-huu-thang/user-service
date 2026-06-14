@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.domain.sharedkernel.service.IdService;
+import vn.xime.user.domain.sharedkernel.error.ErrorCode;
+import vn.xime.user.domain.sharedkernel.error.PublicError;
 import vn.xime.user.domain.profile.model.UserProfile;
 
 import vn.xime.user.application.dto.external.profile.CreateMyProfileRequest;
@@ -53,8 +55,8 @@ public class CreateMyProfileUseCase {
             )
         ) {
 
-            throw new IllegalStateException(
-                "User profile already exists"
+            throw new PublicError(
+                ErrorCode.PROFILE_ALREADY_EXISTS
             );
         }
 
