@@ -1,6 +1,7 @@
-package vn.xime.user.domain.sharedkernel.error;
+package vn.xime.user.common.exception;
 
 import lombok.Getter;
+import vn.xime.user.domain.error.ErrorCode;
 
 /**
  * Base application exception carrying an ErrorCode from the catalog.

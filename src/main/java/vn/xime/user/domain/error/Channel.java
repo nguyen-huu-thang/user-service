@@ -1,4 +1,4 @@
-package vn.xime.user.domain.sharedkernel.error;
+package vn.xime.user.domain.error;
 
 /**
  * Outgoing channel an error is being sent through (decides redaction).

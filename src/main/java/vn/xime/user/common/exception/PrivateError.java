@@ -1,4 +1,6 @@
-package vn.xime.user.domain.sharedkernel.error;
+package vn.xime.user.common.exception;
+
+import vn.xime.user.domain.error.ErrorCode;
 
 /**
  * Error that must stay inside this service (highest security).

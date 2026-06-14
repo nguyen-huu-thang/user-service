@@ -1,4 +1,4 @@
-package vn.xime.user.domain.sharedkernel.error;
+package vn.xime.user.domain.error;
 
 /**
  * Redacts an error code according to the outgoing channel and its visibility.

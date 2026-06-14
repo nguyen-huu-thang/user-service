@@ -7,8 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.domain.sharedkernel.service.IdService;
-import vn.xime.user.domain.sharedkernel.error.ErrorCode;
-import vn.xime.user.domain.sharedkernel.error.PublicError;
+import vn.xime.user.domain.error.ErrorCode;
+import vn.xime.user.common.exception.PublicError;
 import vn.xime.user.domain.contact.model.UserLink;
 
 import vn.xime.user.application.dto.external.link.LinkResponse;

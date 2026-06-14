@@ -1,6 +1,4 @@
-package vn.xime.user.domain.sharedkernel.error;
-
-import lombok.Getter;
+package vn.xime.user.domain.error;
 
 /**
  * Centralized error catalog for user-service.
@@ -11,9 +9,9 @@ import lombok.Getter;
  * - user-service block 040000-049999
  *   (Private 040000-043999 / System 044000-046999 / Public 047000-049999)
  *
- * Domain pure: dùng int httpStatus + GrpcCode (không phụ thuộc Spring/io.grpc).
+ * Domain pure: không phụ thuộc thư viện nào (kể cả Lombok) - getter viết tay.
+ * Dùng int httpStatus + GrpcCode để không phụ thuộc Spring/io.grpc.
  */
-@Getter
 public enum ErrorCode {
 
     // ===== common - Private (lỗi hạ tầng, không ra ngoài) =====
@@ -58,6 +56,30 @@ public enum ErrorCode {
         this.grpcCode = grpcCode;
         this.visibility = visibility;
         this.message = message;
+    }
+
+    public String getErrorKey() {
+        return errorKey;
+    }
+
+    public int getCode() {
+        return code;
+    }
+
+    public int getHttpStatus() {
+        return httpStatus;
+    }
+
+    public GrpcCode getGrpcCode() {
+        return grpcCode;
+    }
+
+    public Visibility getVisibility() {
+        return visibility;
+    }
+
+    public String getMessage() {
+        return message;
     }
 
     /**

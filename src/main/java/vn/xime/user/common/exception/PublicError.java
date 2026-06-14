@@ -1,4 +1,6 @@
-package vn.xime.user.domain.sharedkernel.error;
+package vn.xime.user.common.exception;
+
+import vn.xime.user.domain.error.ErrorCode;
 
 /**
  * Error safe to expose to the browser / REST external (lowest security).

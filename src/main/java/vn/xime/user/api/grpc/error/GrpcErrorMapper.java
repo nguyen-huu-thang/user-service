@@ -7,11 +7,11 @@ import io.grpc.StatusRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import vn.xime.user.domain.sharedkernel.error.AppException;
-import vn.xime.user.domain.sharedkernel.error.Channel;
-import vn.xime.user.domain.sharedkernel.error.ErrorCode;
-import vn.xime.user.domain.sharedkernel.error.ErrorRedactor;
-import vn.xime.user.domain.sharedkernel.error.Visibility;
+import vn.xime.user.common.exception.AppException;
+import vn.xime.user.domain.error.Channel;
+import vn.xime.user.domain.error.ErrorCode;
+import vn.xime.user.domain.error.ErrorRedactor;
+import vn.xime.user.domain.error.Visibility;
 
 /**
  * Shared gRPC exception mapper - one place for all internal gRPC APIs.

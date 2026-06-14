@@ -1,4 +1,4 @@
-package vn.xime.user.domain.sharedkernel.error;
+package vn.xime.user.domain.error;
 
 /**
  * Error exposure level (decreasing security): which channel may see the real error.

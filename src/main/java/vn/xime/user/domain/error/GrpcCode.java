@@ -1,4 +1,4 @@
-package vn.xime.user.domain.sharedkernel.error;
+package vn.xime.user.domain.error;
 
 /**
  * Language-neutral gRPC status code, mirroring the names of io.grpc.Status.Code.

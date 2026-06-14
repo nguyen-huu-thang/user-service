@@ -8,11 +8,11 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import vn.xime.user.domain.sharedkernel.error.AppException;
-import vn.xime.user.domain.sharedkernel.error.Channel;
-import vn.xime.user.domain.sharedkernel.error.ErrorCode;
-import vn.xime.user.domain.sharedkernel.error.ErrorRedactor;
-import vn.xime.user.domain.sharedkernel.error.Visibility;
+import vn.xime.user.common.exception.AppException;
+import vn.xime.user.domain.error.Channel;
+import vn.xime.user.domain.error.ErrorCode;
+import vn.xime.user.domain.error.ErrorRedactor;
+import vn.xime.user.domain.error.Visibility;
 
 /**
  * Global REST exception handler - maps exceptions to the standard error body.
