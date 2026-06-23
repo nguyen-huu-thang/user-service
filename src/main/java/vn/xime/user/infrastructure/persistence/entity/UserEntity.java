@@ -34,7 +34,10 @@ public class UserEntity {
     // BASIC INFO
     // =========================
 
-    @Column(name = "username", nullable = false, length = 100)
+    // username nullable: register by email/phone may have no username yet.
+    // Postgres treats NULLs as distinct, so uk_users_username still allows
+    // multiple null-username rows.
+    @Column(name = "username", nullable = true, length = 100)
     private String username;
 
     @Column(name = "password_hash", nullable = false, columnDefinition = "TEXT")

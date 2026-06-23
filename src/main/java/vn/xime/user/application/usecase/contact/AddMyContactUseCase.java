@@ -1,18 +1,16 @@
 package vn.xime.user.application.usecase.contact;
 
-import java.time.Instant;
-
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import vn.xime.user.domain.sharedkernel.factory.IdFactory;
 import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.domain.sharedkernel.service.IdService;
 import vn.xime.user.domain.error.ErrorCode;
 import vn.xime.user.common.exception.PublicError;
 import vn.xime.user.domain.contact.model.UserContact;
+import vn.xime.user.domain.user.factory.UserContactFactory;
 
 import vn.xime.user.application.dto.external.contact.AddContactRequest;
 import vn.xime.user.application.dto.external.contact.ContactResponse;
@@ -25,6 +23,8 @@ import vn.xime.user.application.port.out.contact.UserContactRepository;
 public class AddMyContactUseCase {
 
     private final UserContactRepository userContactRepository;
+
+    private final UserContactFactory userContactFactory;
 
     private final UserContactMapper mapper;
 
@@ -70,17 +70,17 @@ public class AddMyContactUseCase {
          * =========================
          * CREATE CONTACT
          * =========================
+         *
+         * Tạo qua factory để chuẩn hoá (normalize) giá trị -
+         * ví dụ email lowercase, phone trim - thay vì new trực
+         * tiếp (vốn bỏ qua normalization).
          */
 
         UserContact contact =
-            new UserContact(
-                IdFactory.generate(),
+            userContactFactory.create(
                 userId,
                 request.type(),
-                request.value(),
-                false,
-                false,
-                Instant.now()
+                request.value()
             );
 
 

@@ -5,10 +5,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import vn.xime.user.domain.sharedkernel.factory.IdFactory;
 import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.domain.sharedkernel.service.IdService;
 import vn.xime.user.domain.contact.model.UserLink;
+import vn.xime.user.domain.user.factory.UserLinkFactory;
 
 import vn.xime.user.application.dto.external.link.AddLinkRequest;
 import vn.xime.user.application.dto.external.link.LinkResponse;
@@ -21,6 +21,8 @@ import vn.xime.user.application.port.out.address.UserLinkRepository;
 public class AddMyLinkUseCase {
 
     private final UserLinkRepository userLinkRepository;
+
+    private final UserLinkFactory userLinkFactory;
 
     private final UserLinkMapper mapper;
 
@@ -49,8 +51,7 @@ public class AddMyLinkUseCase {
          */
 
         UserLink link =
-            new UserLink(
-                IdFactory.generate(),
+            userLinkFactory.create(
                 userId,
                 request.type(),
                 request.url()

@@ -10,6 +10,8 @@ import vn.xime.user.domain.sharedkernel.service.IdService;
 import vn.xime.user.domain.error.ErrorCode;
 import vn.xime.user.common.exception.PublicError;
 import vn.xime.user.domain.contact.model.UserContact;
+import vn.xime.user.domain.contact.service.UserContactDomainService;
+import vn.xime.user.domain.contact.service.UserContactDomainService.PrimaryAssignment;
 
 import vn.xime.user.application.dto.external.contact.ContactResponse;
 import vn.xime.user.application.mapper.contact.UserContactMapper;
@@ -21,6 +23,8 @@ import vn.xime.user.application.port.out.contact.UserContactRepository;
 public class SetPrimaryContactUseCase {
 
     private final UserContactRepository userContactRepository;
+
+    private final UserContactDomainService userContactDomainService;
 
     private final UserContactMapper mapper;
 
@@ -77,29 +81,31 @@ public class SetPrimaryContactUseCase {
 
         /*
          * =========================
-         * UNMARK EXISTING PRIMARY
+         * APPLY PRIMARY RULE (DOMAIN)
          * =========================
+         *
+         * Quy tắc "mỗi type chỉ 1 primary, promote cái mới thì
+         * demote cái cũ" là cross-entity rule -> đặt ở domain
+         * service. Use case chỉ lo load primary hiện tại và lưu
+         * kết quả.
          */
 
-        userContactRepository
-            .findPrimaryContact(userId, target.getType())
-            .filter(existing -> !existing.getId().equals(id))
-            .ifPresent(existing ->
-                userContactRepository.save(
-                    existing.unmarkPrimary()
+        PrimaryAssignment assignment =
+            userContactDomainService.setPrimary(
+                target,
+                userContactRepository.findPrimaryContact(
+                    userId,
+                    target.getType()
                 )
             );
 
-
-        /*
-         * =========================
-         * MARK TARGET AS PRIMARY
-         * =========================
-         */
+        assignment.getDemoted().ifPresent(
+            userContactRepository::save
+        );
 
         UserContact saved =
             userContactRepository.save(
-                target.markPrimary()
+                assignment.getPromoted()
             );
 
 

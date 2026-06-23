@@ -26,7 +26,9 @@ public class User {
             Instant updatedAt
     ) {
         this.id = Objects.requireNonNull(id);
-        this.username = Objects.requireNonNull(username);
+        // username nullable: user đăng ký bằng email/phone chưa có username.
+        // username nullable: register by email/phone may have no username yet.
+        this.username = username;
         this.passwordHash = Objects.requireNonNull(passwordHash);
         this.status = Objects.requireNonNull(status);
         this.createdAt = Objects.requireNonNull(createdAt);
@@ -40,7 +42,10 @@ public class User {
     // =========================
 
     private void validate() {
-        if (username.isBlank()) {
+        // username có thể null (đăng ký bằng email/phone), nhưng nếu
+        // có thì không được rỗng.
+        // username may be null (email/phone signup), but must not be blank if present.
+        if (username != null && username.isBlank()) {
             throw new IllegalArgumentException("username must not be blank");
         }
     }

@@ -55,6 +55,23 @@ public class UserContactFactory {
         );
     }
 
+    /**
+     * =========================
+     * CREATE PRIMARY
+     * =========================
+     *
+     * Tạo contact và đánh dấu primary ngay - dùng cho luồng
+     * đăng ký bằng email/phone, contact đầu tiên mặc định là
+     * primary của user.
+     */
+    public UserContact createPrimary(
+            Id userId,
+            ContactType type,
+            String value
+    ) {
+        return create(userId, type, value).markPrimary();
+    }
+
     private String normalize(ContactType type, String value) {
         return switch (type) {
             case EMAIL -> value.trim().toLowerCase();

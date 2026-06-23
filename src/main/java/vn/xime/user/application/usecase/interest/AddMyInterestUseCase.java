@@ -5,13 +5,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import vn.xime.user.domain.sharedkernel.factory.IdFactory;
 import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.domain.sharedkernel.service.IdService;
 import vn.xime.user.domain.error.ErrorCode;
 import vn.xime.user.common.exception.PublicError;
 import vn.xime.user.domain.interest.model.Interest;
 import vn.xime.user.domain.interest.model.UserInterest;
+import vn.xime.user.domain.user.factory.UserInterestFactory;
 
 import vn.xime.user.application.dto.external.interest.MyInterestResponse;
 import vn.xime.user.application.mapper.interest.UserInterestMapper;
@@ -26,6 +26,8 @@ public class AddMyInterestUseCase {
     private final UserInterestRepository userInterestRepository;
 
     private final InterestRepository interestRepository;
+
+    private final UserInterestFactory userInterestFactory;
 
     private final UserInterestMapper mapper;
 
@@ -95,8 +97,7 @@ public class AddMyInterestUseCase {
          */
 
         UserInterest userInterest =
-            new UserInterest(
-                IdFactory.generate(),
+            userInterestFactory.create(
                 userId,
                 iId,
                 1.0

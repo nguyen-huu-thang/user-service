@@ -17,8 +17,11 @@ public class UserFactory {
         // VALIDATE (DOMAIN LEVEL)
         // =========================
 
-        if (username == null || username.isBlank()) {
-            throw new IllegalArgumentException("username is required");
+        // username nullable: user đăng ký bằng email/phone chưa có username.
+        // Nếu có thì không được rỗng.
+        // username nullable (email/phone signup); must not be blank if present.
+        if (username != null && username.isBlank()) {
+            throw new IllegalArgumentException("username must not be blank");
         }
 
         if (passwordHash == null || passwordHash.isBlank()) {

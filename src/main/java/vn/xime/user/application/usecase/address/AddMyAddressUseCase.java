@@ -5,10 +5,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import vn.xime.user.domain.sharedkernel.factory.IdFactory;
 import vn.xime.user.domain.sharedkernel.model.Id;
 import vn.xime.user.domain.sharedkernel.service.IdService;
 import vn.xime.user.domain.address.model.UserAddress;
+import vn.xime.user.domain.user.factory.UserAddressFactory;
 
 import vn.xime.user.application.dto.external.address.AddAddressRequest;
 import vn.xime.user.application.dto.external.address.AddressResponse;
@@ -21,6 +21,8 @@ import vn.xime.user.application.port.out.address.UserAddressRepository;
 public class AddMyAddressUseCase {
 
     private final UserAddressRepository userAddressRepository;
+
+    private final UserAddressFactory userAddressFactory;
 
     private final UserAddressMapper mapper;
 
@@ -49,8 +51,7 @@ public class AddMyAddressUseCase {
          */
 
         UserAddress address =
-            new UserAddress(
-                IdFactory.generate(),
+            userAddressFactory.create(
                 userId,
                 request.type(),
                 request.country(),
